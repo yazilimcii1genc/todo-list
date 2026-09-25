@@ -7,6 +7,7 @@ const taskForm = document.getElementById("task-form");
 const taskInput = document.getElementById("task-input");
 const taskList = document.getElementById("task-list");
 const inputError = document.getElementById("input-error");
+const clearAllBtn = document.getElementById("clear-all-btn");
 
 // Görev ekleme fonksiyonu
 function addTask(text) {
@@ -77,6 +78,27 @@ function cancelEdit() {
   renderTasks();
 }
 
+// Tekil görev silme fonksiyonu
+function deleteTask(id) {
+  tasks = tasks.filter((task) => task.id !== id);
+  if (editingTaskId === id) {
+    editingTaskId = null;
+  }
+  renderTasks();
+}
+
+// Tüm görevleri temizleme
+function clearAllTasks() {
+  if (tasks.length === 0) return;
+
+  const confirmed = window.confirm("Listedeki tüm görevleri silmek istediğinize emin misiniz?");
+  if (confirmed) {
+    tasks = [];
+    editingTaskId = null;
+    renderTasks();
+  }
+}
+
 // Hata mesajı gösterme
 function showError(message) {
   if (!inputError) return;
@@ -95,6 +117,11 @@ function hideError() {
 // Görevleri ekrana basma
 function renderTasks() {
   taskList.innerHTML = "";
+
+  // Tümünü temizle butonunun durumunu güncelle
+  if (clearAllBtn) {
+    clearAllBtn.disabled = tasks.length === 0;
+  }
 
   if (tasks.length === 0) {
     const emptyEl = document.createElement("li");
@@ -214,7 +241,22 @@ function renderTasks() {
       `;
       editBtn.addEventListener("click", () => startEdit(task.id));
 
+      // Sil butonu
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "btn-icon btn-delete";
+      deleteBtn.title = "Görevi Sil";
+      deleteBtn.setAttribute("aria-label", "Sil");
+      deleteBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      `;
+      deleteBtn.addEventListener("click", () => deleteTask(task.id));
+
       actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
 
       li.appendChild(label);
       li.appendChild(content);
@@ -236,6 +278,10 @@ taskInput.addEventListener("input", () => {
     hideError();
   }
 });
+
+if (clearAllBtn) {
+  clearAllBtn.addEventListener("click", clearAllTasks);
+}
 
 // İlk çalıştırma
 renderTasks();
