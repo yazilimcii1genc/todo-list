@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Profesyonel ve yalın yapılacaklar listesi uygulaması.">
+  <title>Hedeflerim — Görev Yöneticisi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="todo-card">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="app-title">Hedeflerim</h1>
+            <p class="app-subtitle">Günlük Görev ve Plan Takip Paneli</p>
+          </div>
+        </div>
+      </header>
+
+      <section class="task-form-section">
+        <form id="task-form" class="task-form" autocomplete="off">
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="task-input" 
+              class="task-input" 
+              placeholder="Yeni bir görev veya hedef yazın..." 
+              maxlength="200"
+            >
+            <div id="input-error" class="input-error" aria-live="polite"></div>
+          </div>
+          <button type="submit" id="add-btn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Ekle</span>
+          </button>
+        </form>
+      </section>
+
+      <section class="task-list-section">
+        <ul id="task-list" class="task-list" aria-label="Görev Listesi"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
