@@ -203,7 +203,7 @@ body {
   background-color: var(--bg-card-muted);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 10px 14px;
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
@@ -212,11 +212,133 @@ body {
   background-color: var(--bg-hover);
 }
 
+.task-item.completed {
+  background-color: rgba(19, 25, 38, 0.6);
+  border-color: rgba(35, 45, 66, 0.6);
+}
+
+.task-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.task-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  background-color: var(--bg-input);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.task-checkbox-label:hover .custom-checkbox {
+  border-color: var(--primary-border);
+}
+
+.task-checkbox-input:checked ~ .custom-checkbox {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.task-checkbox-input:focus-visible ~ .custom-checkbox {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
 .task-content {
   flex: 1;
   font-size: 0.92rem;
   color: var(--text-main);
   word-break: break-word;
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+.task-item.completed .task-content {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background-color: var(--bg-card-muted);
+  border-color: var(--border-medium);
+  color: var(--text-main);
+}
+
+.btn-edit:hover {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+  background-color: rgba(245, 158, 11, 0.08);
+}
+
+/* Satır içi düzenleme görünümü */
+.task-edit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.task-edit-input {
+  flex: 1;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+}
+
+.btn-save {
+  color: var(--success);
+}
+
+.btn-save:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.btn-cancel:hover {
+  color: var(--text-main);
+  border-color: var(--border-medium);
 }
 
 .empty-state {
