@@ -32,12 +32,19 @@
               type="text" 
               id="task-input" 
               class="task-input" 
-              placeholder="Yeni bir görev veya hedef yazın..." 
+              placeholder="Yeni bir görev veya hedef yazın (Enter ile ekleyin)..." 
               maxlength="200"
             >
-            <div id="input-error" class="input-error" aria-live="polite"></div>
+            <div id="input-error" class="input-error" role="alert" aria-live="polite">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span id="input-error-text"></span>
+            </div>
           </div>
-          <button type="submit" id="add-btn" class="btn btn-primary">
+          <button type="submit" id="add-btn" class="btn btn-primary" aria-label="Görevi Ekle">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -49,8 +56,18 @@
 
       <section class="task-list-section">
         <div class="list-toolbar">
-          <span class="list-section-title">Görevler</span>
-          <button type="button" id="clear-all-btn" class="btn btn-clear" title="Tüm görevleri listeden sil">
+          <div class="filter-group" role="tablist" aria-label="Görev Filtreleri">
+            <button type="button" class="filter-btn active" data-filter="all" role="tab" aria-selected="true">
+              Tümü <span class="filter-count" id="count-all">0</span>
+            </button>
+            <button type="button" class="filter-btn" data-filter="active" role="tab" aria-selected="false">
+              Aktif <span class="filter-count" id="count-active">0</span>
+            </button>
+            <button type="button" class="filter-btn" data-filter="completed" role="tab" aria-selected="false">
+              Tamamlanan <span class="filter-count" id="count-completed">0</span>
+            </button>
+          </div>
+          <button type="button" id="clear-all-btn" class="btn btn-clear" title="Tüm görevleri listeden sil" disabled>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -58,8 +75,31 @@
             <span>Tümünü Temizle</span>
           </button>
         </div>
+
         <ul id="task-list" class="task-list" aria-label="Görev Listesi"></ul>
       </section>
+
+      <footer class="app-footer">
+        <div class="stats-summary">
+          <div class="stat-item">
+            <span class="stat-label">Toplam:</span>
+            <span class="stat-value" id="stat-total">0</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-label">Tamamlanan:</span>
+            <span class="stat-value text-success" id="stat-completed">0</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-label">Bekleyen:</span>
+            <span class="stat-value text-warning" id="stat-pending">0</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrapper" title="İlerleme Oranı">
+          <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </footer>
     </main>
   </div>
 

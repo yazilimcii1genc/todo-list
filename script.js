@@ -1,20 +1,60 @@
-// Görev listesi durumu
+// Sabitler ve Durum Yönetimi
+const STORAGE_KEY = "hedefim_todo_tasks";
+
 let tasks = [];
 let editingTaskId = null;
+let currentFilter = "all"; // "all" | "active" | "completed"
 
 // DOM Elemanları
 const taskForm = document.getElementById("task-form");
 const taskInput = document.getElementById("task-input");
 const taskList = document.getElementById("task-list");
 const inputError = document.getElementById("input-error");
+const inputErrorText = document.getElementById("input-error-text");
 const clearAllBtn = document.getElementById("clear-all-btn");
+
+// İstatistik ve Sayaç Elemanları
+const statTotal = document.getElementById("stat-total");
+const statCompleted = document.getElementById("stat-completed");
+const statPending = document.getElementById("stat-pending");
+const progressBarFill = document.getElementById("progress-bar-fill");
+
+const countAll = document.getElementById("count-all");
+const countActive = document.getElementById("count-active");
+const countCompleted = document.getElementById("count-completed");
+
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+// LocalStorage İşlemleri
+function loadTasksFromStorage() {
+  try {
+    const rawData = localStorage.getItem(STORAGE_KEY);
+    if (rawData) {
+      const parsed = JSON.parse(rawData);
+      if (Array.isArray(parsed)) {
+        tasks = parsed;
+      }
+    }
+  } catch (err) {
+    console.error("LocalStorage verisi okunurken hata oluştu:", err);
+    tasks = [];
+  }
+}
+
+function saveTasksToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch (err) {
+    console.error("LocalStorage verisi kaydedilirken hata oluştu:", err);
+  }
+}
 
 // Görev ekleme fonksiyonu
 function addTask(text) {
   const trimmedText = text.trim();
 
   if (!trimmedText) {
-    showError("Lütfen boş bir görev bırakmayın.");
+    showError("Lütfen bir görev veya hedef yazın.");
     return;
   }
 
@@ -23,12 +63,15 @@ function addTask(text) {
   const newTask = {
     id: Date.now().toString(),
     text: trimmedText,
-    completed: false
+    completed: false,
+    createdAt: new Date().toISOString()
   };
 
-  tasks.push(newTask);
+  tasks.unshift(newTask);
   taskInput.value = "";
-  renderTasks();
+  
+  saveTasksToStorage();
+  updateUI();
 }
 
 // Görev tamamlanma durumunu değiştirme
@@ -39,7 +82,9 @@ function toggleTask(id) {
     }
     return task;
   });
-  renderTasks();
+
+  saveTasksToStorage();
+  updateUI();
 }
 
 // Düzenleme modunu başlatma
@@ -57,7 +102,14 @@ function startEdit(id) {
 // Düzenlemeyi kaydetme
 function saveEdit(id, newText) {
   const trimmed = newText.trim();
+  const editInput = document.getElementById(`edit-input-${id}`);
+
   if (!trimmed) {
+    if (editInput) {
+      editInput.classList.add("has-error");
+      editInput.placeholder = "Görev metni boş bırakılamaz...";
+      editInput.focus();
+    }
     return;
   }
 
@@ -69,7 +121,8 @@ function saveEdit(id, newText) {
   });
 
   editingTaskId = null;
-  renderTasks();
+  saveTasksToStorage();
+  updateUI();
 }
 
 // Düzenlemeyi iptal etme
@@ -84,7 +137,9 @@ function deleteTask(id) {
   if (editingTaskId === id) {
     editingTaskId = null;
   }
-  renderTasks();
+
+  saveTasksToStorage();
+  updateUI();
 }
 
 // Tüm görevleri temizleme
@@ -95,37 +150,89 @@ function clearAllTasks() {
   if (confirmed) {
     tasks = [];
     editingTaskId = null;
-    renderTasks();
+    saveTasksToStorage();
+    updateUI();
   }
+}
+
+// Filtre değiştirme
+function setFilter(filter) {
+  currentFilter = filter;
+
+  filterButtons.forEach((btn) => {
+    const isActive = btn.dataset.filter === filter;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  renderTasks();
 }
 
 // Hata mesajı gösterme
 function showError(message) {
   if (!inputError) return;
-  inputError.textContent = message;
+  inputErrorText.textContent = message;
   inputError.classList.add("active");
+  taskInput.classList.add("has-error");
   taskInput.focus();
 }
 
 // Hata mesajını gizleme
 function hideError() {
   if (!inputError) return;
-  inputError.textContent = "";
+  inputErrorText.textContent = "";
   inputError.classList.remove("active");
+  taskInput.classList.remove("has-error");
 }
 
-// Görevleri ekrana basma
+// İstatistikleri ve Sayaçları Güncelleme
+function updateStats() {
+  const total = tasks.length;
+  const completed = tasks.filter((t) => t.completed).length;
+  const pending = total - completed;
+
+  if (statTotal) statTotal.textContent = total;
+  if (statCompleted) statCompleted.textContent = completed;
+  if (statPending) statPending.textContent = pending;
+
+  if (countAll) countAll.textContent = total;
+  if (countActive) countActive.textContent = pending;
+  if (countCompleted) countCompleted.textContent = completed;
+
+  if (clearAllBtn) {
+    clearAllBtn.disabled = total === 0;
+  }
+
+  if (progressBarFill) {
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+    progressBarFill.style.width = `${percentage}%`;
+  }
+}
+
+// Görev listesini DOM'a render etme
 function renderTasks() {
   taskList.innerHTML = "";
 
-  // Tümünü temizle butonunun durumunu güncelle
-  if (clearAllBtn) {
-    clearAllBtn.disabled = tasks.length === 0;
+  // Filtreye göre görevleri ayıkla
+  let filteredTasks = tasks;
+  if (currentFilter === "active") {
+    filteredTasks = tasks.filter((t) => !t.completed);
+  } else if (currentFilter === "completed") {
+    filteredTasks = tasks.filter((t) => t.completed);
   }
 
-  if (tasks.length === 0) {
+  // Boş durum kontrolü
+  if (filteredTasks.length === 0) {
     const emptyEl = document.createElement("li");
     emptyEl.className = "empty-state";
+
+    let emptyMessage = "Henüz eklenmiş bir görev bulunmuyor.";
+    if (currentFilter === "active" && tasks.length > 0) {
+      emptyMessage = "Aktif görev bulunmuyor. Tüm görevlerinizi tamamladınız.";
+    } else if (currentFilter === "completed" && tasks.length > 0) {
+      emptyMessage = "Henüz tamamlanmış bir görev bulunmuyor.";
+    }
+
     emptyEl.innerHTML = `
       <div class="empty-state-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -134,19 +241,19 @@ function renderTasks() {
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
       </div>
-      <p class="empty-state-text">Henüz eklenmiş bir görev bulunmuyor.</p>
+      <p class="empty-state-text">${emptyMessage}</p>
     `;
     taskList.appendChild(emptyEl);
     return;
   }
 
-  tasks.forEach((task) => {
+  filteredTasks.forEach((task) => {
     const li = document.createElement("li");
     li.className = `task-item ${task.completed ? "completed" : ""}`;
     li.dataset.id = task.id;
 
     if (editingTaskId === task.id) {
-      // Düzenleme durumu
+      // Satır içi düzenleme formu
       const editWrap = document.createElement("div");
       editWrap.className = "task-edit-wrap";
 
@@ -160,7 +267,7 @@ function renderTasks() {
       const saveBtn = document.createElement("button");
       saveBtn.type = "button";
       saveBtn.className = "btn-icon btn-save";
-      saveBtn.title = "Kaydet";
+      saveBtn.title = "Kaydet (Enter)";
       saveBtn.setAttribute("aria-label", "Kaydet");
       saveBtn.innerHTML = `
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -171,7 +278,7 @@ function renderTasks() {
       const cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
       cancelBtn.className = "btn-icon btn-cancel";
-      cancelBtn.title = "İptal";
+      cancelBtn.title = "İptal (Esc)";
       cancelBtn.setAttribute("aria-label", "İptal");
       cancelBtn.innerHTML = `
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -182,6 +289,10 @@ function renderTasks() {
 
       saveBtn.addEventListener("click", () => saveEdit(task.id, editInput.value));
       cancelBtn.addEventListener("click", () => cancelEdit());
+
+      editInput.addEventListener("input", () => {
+        editInput.classList.remove("has-error");
+      });
 
       editInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -197,10 +308,10 @@ function renderTasks() {
       editWrap.appendChild(cancelBtn);
       li.appendChild(editWrap);
     } else {
-      // Normal görünüm: Checkbox
+      // Checkbox
       const label = document.createElement("label");
       label.className = "task-checkbox-label";
-      label.setAttribute("aria-label", `${task.text} görevini tamamla`);
+      label.setAttribute("aria-label", `${task.text} görevini tamamlandı olarak işaretle`);
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -219,16 +330,16 @@ function renderTasks() {
       label.appendChild(checkbox);
       label.appendChild(customBox);
 
-      // Metin
+      // Görev Metni
       const content = document.createElement("span");
       content.className = "task-content";
       content.textContent = task.text;
 
-      // İşlem butonları
+      // Aksiyon Butonları
       const actions = document.createElement("div");
       actions.className = "task-actions";
 
-      // Düzenle butonu
+      // Düzenle Butonu
       const editBtn = document.createElement("button");
       editBtn.type = "button";
       editBtn.className = "btn-icon btn-edit";
@@ -241,7 +352,7 @@ function renderTasks() {
       `;
       editBtn.addEventListener("click", () => startEdit(task.id));
 
-      // Sil butonu
+      // Sil Butonu
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn-icon btn-delete";
@@ -267,10 +378,23 @@ function renderTasks() {
   });
 }
 
+// UI Genel Güncellemesi
+function updateUI() {
+  updateStats();
+  renderTasks();
+}
+
 // Olay Dinleyicileri
 taskForm.addEventListener("submit", (e) => {
   e.preventDefault();
   addTask(taskInput.value);
+});
+
+taskInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    addTask(taskInput.value);
+  }
 });
 
 taskInput.addEventListener("input", () => {
@@ -283,5 +407,12 @@ if (clearAllBtn) {
   clearAllBtn.addEventListener("click", clearAllTasks);
 }
 
-// İlk çalıştırma
-renderTasks();
+filterButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    setFilter(btn.dataset.filter);
+  });
+});
+
+// Başlangıç: Verileri yükle ve arayüzü çiz
+loadTasksFromStorage();
+updateUI();
